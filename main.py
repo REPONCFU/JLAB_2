@@ -1,4 +1,9 @@
 import hashlib
+from rich.console import Console
+from rich.panel import Panel
+from rich.prompt import Prompt
+
+console = Console()
 
 
 def hash_message(message, algorithm="sha256"):
@@ -14,9 +19,10 @@ def hash_message(message, algorithm="sha256"):
     if algorithm not in algorithms:
         raise ValueError(f"Неподдерживаемый алгоритм: {algorithm}")
 
-    hasher = algorithms[algorithm]()
-    hasher.update(message.encode('utf-8'))
-    return hasher.hexdigest()
+    with console.status("[bold green]Хеширование выполняется...", spinner="dots"):
+        hasher = algorithms[algorithm]()
+        hasher.update(message.encode('utf-8'))
+        return hasher.hexdigest()
 
 
 def save_to_file(filename, data):
@@ -28,19 +34,23 @@ def save_to_file(filename, data):
 
 
 if __name__ == "__main__":
-    print("Добро пожаловать в хешер!")
-    print("Поддерживаемые алгоритмы: sha256, sha512, md5")
+    console.print(Panel("[bold cyan]Добро пожаловать в улучшенный ХЕШЕР![/bold cyan]"))
+    console.print("[bold yellow]Поддерживаемые алгоритмы:[/bold yellow] sha256, sha512, md5")
     output_file = "hash_results.txt"
 
     while True:
-        message = input("\nВведите сообщение для хеширования (или 'выход' для завершения): ")
+        message = Prompt.ask(
+            "\n[bold green]Введите сообщение для хеширования (или 'выход' для завершения)[/bold green]")
         if message.lower() == "выход":
-            print(f"Результаты сохранены в файл: {output_file}")
+            console.print(Panel(f"[bold cyan]Результаты сохранены в файл: {output_file}[/bold cyan]"), style="cyan")
             break
-        algorithm = input("Введите алгоритм (sha256, sha512, md5): ").lower().strip() or "sha256"
+
+        algorithm = Prompt.ask("[bold magenta]Введите алгоритм (sha256, sha512, md5)[/bold magenta]",
+                               default="sha256").lower().strip()
+
         try:
             hashed = hash_message(message, algorithm)
-            print(f"Хэш ({algorithm}): {hashed}")
+            console.print(Panel(f"[bold blue]Хэш ({algorithm}):[/bold blue] [green]{hashed}[/green]"))
             save_to_file(output_file, f"{message} ({algorithm}): {hashed}")
         except ValueError as e:
-            print(e)
+            console.print(f"[bold red]{e}[/bold red]")
